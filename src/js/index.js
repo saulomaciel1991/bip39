@@ -139,6 +139,9 @@
     DOM.qrImage = DOM.qrContainer.find(".qr-image");
     DOM.qrHint = DOM.qrContainer.find(".qr-hint");
     DOM.showQrEls = $("[data-show-qr]");
+    DOM.passphraseBip84Xpub = $("#passphrase-bip84-xpub"); // Esta linha já deve estar aí
+    DOM.targetXpubInput = $("#target-xpub-input");   // <-- Adicione esta linha
+    DOM.comparisonResult = $("#comparison-result");   // <-- Adicione esta linha
 
     function init() {
         // Events
@@ -156,6 +159,7 @@
         DOM.phrase.on("input", delayedPhraseChanged);
         DOM.showSplitMnemonic.on("change", toggleSplitMnemonic);
         DOM.passphrase.on("input", delayedPhraseChanged);
+        DOM.targetXpubInput.on("input", compareXpubs); 
         DOM.generate.on("click", generateClicked);
         DOM.more.on("click", showMore);
         DOM.seed.on("input", delayedSeedChanged);
@@ -193,6 +197,27 @@
         hideValidationError();
         populateNetworkSelect();
         populateClientSelect();
+    }
+
+    function compareXpubs() {
+        var generatedXpub = DOM.passphraseBip84Xpub.val().trim(); // Pega o valor gerado (removendo espaços extras)
+        var targetXpub = DOM.targetXpubInput.val().trim();       // Pega o valor alvo (removendo espaços extras)
+
+        // Se o campo alvo estiver vazio, limpa o resultado
+        if (targetXpub === "") {
+            DOM.comparisonResult.text("");
+            DOM.comparisonResult.removeClass("text-success text-danger");
+            return;
+        }
+
+        // Compara os dois valores
+        if (generatedXpub === targetXpub) {
+            DOM.comparisonResult.text("Resultado: IGUAIS");
+            DOM.comparisonResult.removeClass("text-danger").addClass("text-success"); // Cor verde para igual
+        } else {
+            DOM.comparisonResult.text("Resultado: DIFERENTES");
+            DOM.comparisonResult.removeClass("text-success").addClass("text-danger"); // Cor vermelha para diferente
+        }
     }
 
     // Event handlers
@@ -1144,7 +1169,8 @@
         // Display the extended keys
         DOM.bip84accountXprv.val(accountXprv);
         DOM.bip84accountXpub.val(accountXpub);
-        $('#passphrase-bip84-xpub').val(accountXpub); // Use 'accountXpub' diretamente
+        DOM.passphraseBip84Xpub.val(accountXpub); 
+        compareXpubs();
     }
 
     function displayBip32Info() {
