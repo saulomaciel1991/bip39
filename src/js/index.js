@@ -1144,6 +1144,7 @@
         // Display the extended keys
         DOM.bip84accountXprv.val(accountXprv);
         DOM.bip84accountXpub.val(accountXpub);
+        $('#passphrase-bip84-xpub').val(accountXpub); // Use 'accountXpub' diretamente
     }
 
     function displayBip32Info() {
