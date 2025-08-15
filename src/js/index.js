@@ -139,9 +139,10 @@
     DOM.qrImage = DOM.qrContainer.find(".qr-image");
     DOM.qrHint = DOM.qrContainer.find(".qr-hint");
     DOM.showQrEls = $("[data-show-qr]");
-    DOM.passphraseBip84Xpub = $("#passphrase-bip84-xpub"); // Esta linha já deve estar aí
-    DOM.targetXpubInput = $("#target-xpub-input");   // <-- Adicione esta linha
-    DOM.comparisonResult = $("#comparison-result");   // <-- Adicione esta linha
+    DOM.passphraseBip84Xpub = $("#passphrase-bip84-xpub"); 
+    DOM.targetXpubInput = $("#target-xpub-input");  
+    DOM.comparisonResult = $("#comparison-result");
+    DOM.copyPassphraseComparisonMsg = $("#copy-passphrase-comparison-msg"); 
 
     function init() {
         // Events
@@ -199,28 +200,61 @@
         populateClientSelect();
     }
 
-    function compareXpubs() {
-        var generatedXpub = DOM.passphraseBip84Xpub.val().trim(); // Pega o valor gerado (removendo espaços extras)
-        var targetXpub = DOM.targetXpubInput.val().trim();       // Pega o valor alvo (removendo espaços extras)
-
-        // Se o campo alvo estiver vazio, limpa o resultado
-        if (targetXpub === "") {
-            DOM.comparisonResult.text("");
-            DOM.comparisonResult.removeClass("text-success text-danger");
-            return;
-        }
-
-        // Compara os dois valores
-        if (generatedXpub === targetXpub) {
-            DOM.comparisonResult.text("Resultado: IGUAIS");
-            DOM.comparisonResult.removeClass("text-danger").addClass("text-success"); // Cor verde para igual
+    // Garanta que esta é a única função copyToClipboard em seu index.js
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
         } else {
-            DOM.comparisonResult.text("Resultado: DIFERENTES");
-            DOM.comparisonResult.removeClass("text-success").addClass("text-danger"); // Cor vermelha para diferente
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                return Promise.resolve(document.execCommand('copy'));
+            } catch (err) {
+                console.error('Fallback: Não foi possível copiar', err);
+                return Promise.reject(err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
         }
     }
 
-    // Event handlers
+    function compareXpubs() {
+        setTimeout(function() {
+            var generatedXpub = DOM.passphraseBip84Xpub.val().trim();
+            var targetXpub = DOM.targetXpubInput.val().trim();
+            var passphraseToCopy = DOM.passphrase.val(); 
+
+            if (passphraseToCopy.length > 0) { 
+                copyToClipboard(passphraseToCopy)
+                    .then(function() {
+                        DOM.copyPassphraseComparisonMsg.fadeIn(200).delay(1500).fadeOut(400);
+                    })
+                    .catch(function(err) {
+                        console.error('Erro ao copiar Passphrase automaticamente: ', err);
+                    });
+            } else {
+                DOM.copyPassphraseComparisonMsg.hide();
+            }
+
+            if (targetXpub === "") {
+                DOM.comparisonResult.text("");
+                DOM.comparisonResult.removeClass("text-success text-danger");
+            } else {
+                if (generatedXpub === targetXpub) {
+                    DOM.comparisonResult.text("Resultado: IGUAIS");
+                    DOM.comparisonResult.removeClass("text-danger").addClass("text-success");
+                } else {
+                    DOM.comparisonResult.text("Resultado: DIFERENTES");
+                    DOM.comparisonResult.removeClass("text-success").addClass("text-danger");
+                }
+            }
+        }, 0);
+    }
 
     function generatedStrengthChanged() {
         var strength = parseInt(DOM.generatedStrength.val());
