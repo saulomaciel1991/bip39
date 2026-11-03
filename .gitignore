@@ -1,2 +1,6 @@
 node_modules
 bip39-standalone.html
+passphrases.csv
+recovered.txt
+.gitignore
+target.txt
